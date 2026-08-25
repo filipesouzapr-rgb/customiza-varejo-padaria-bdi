@@ -1,0 +1,9 @@
+{
+  "name": "customiza-varejo-padaria-bdi",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "pdv",
+    "backoffice"
+  ]
+}
