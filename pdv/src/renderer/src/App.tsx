@@ -1,35 +1,55 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { useEffect, useState } from 'react'
+import { useSession } from './lib/useSession'
+import { useOperador } from './lib/useOperador'
+import { supabase } from './lib/supabase'
+import { LoginPage } from './pages/LoginPage'
+import { AbrirCaixaPage } from './pages/AbrirCaixaPage'
+import { VendaPage } from './pages/VendaPage'
+import type { CaixaSessao } from './types'
 
-function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+function App(): React.JSX.Element | null {
+  const { session, loading: carregandoSessao } = useSession()
+  const { operador, loading: carregandoOperador } = useOperador(session)
+  const [caixaSessao, setCaixaSessao] = useState<CaixaSessao | null>(null)
+  const [carregandoCaixa, setCarregandoCaixa] = useState(true)
 
-  return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
+  useEffect(() => {
+    if (!session) {
+      setCarregandoCaixa(false)
+      return
+    }
+
+    setCarregandoCaixa(true)
+    supabase
+      .from('caixa_sessoes')
+      .select('*')
+      .is('fechado_em', null)
+      .order('aberto_em', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        setCaixaSessao(data as CaixaSessao | null)
+        setCarregandoCaixa(false)
+      })
+  }, [session])
+
+  if (carregandoSessao || carregandoOperador || carregandoCaixa) return null
+
+  if (!session) return <LoginPage />
+
+  if (!operador) {
+    return (
+      <div className="tela-central">
+        <p>Este usuário não tem um perfil de operador cadastrado. Fale com o dono.</p>
       </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </>
-  )
+    )
+  }
+
+  if (!caixaSessao) {
+    return <AbrirCaixaPage operadorId={operador.id} onAberta={setCaixaSessao} />
+  }
+
+  return <VendaPage operador={operador} caixaSessao={caixaSessao} />
 }
 
 export default App
