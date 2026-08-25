@@ -132,16 +132,6 @@ td {
   font-size: 18px;
 }
 
-.venda-desconto-form,
-.venda-pagamento-form {
-  display: flex;
-  gap: 6px;
-}
-
-.venda-pagamento-form select {
-  flex: 1;
-}
-
 .venda-pagamentos-lista li {
   display: flex;
   justify-content: space-between;
@@ -150,38 +140,33 @@ td {
   padding: 4px 0;
 }
 
-.seletor-cliente {
-  position: relative;
-}
-
-.seletor-cliente input {
-  width: 100%;
-}
-
-.seletor-cliente-resultados {
-  position: absolute;
-  z-index: 1;
-  background: var(--ev-c-black-soft);
-  border: 1px solid var(--ev-c-gray-2);
-  border-radius: 6px;
-  width: 100%;
-  margin-top: 4px;
-}
-
-.seletor-cliente-resultados button {
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-}
-
-.seletor-cliente-selecionado {
+.venda-cliente-selecionado {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: var(--ev-c-black-soft);
   padding: 8px 10px;
   border-radius: 6px;
+}
+
+.venda-cliente-vazio {
+  font-size: 13px;
+  color: var(--ev-c-text-2);
+}
+
+.venda-atalhos {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  padding: 8px;
+  background: var(--ev-c-black-soft);
+  border-top: 1px solid var(--ev-c-gray-3);
+  font-size: 12px;
+  color: var(--ev-c-text-2);
 }
 
 .modal-fundo {
@@ -208,6 +193,57 @@ td {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.seletor-modal {
+  width: 420px;
+}
+
+.seletor-modal-lista {
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.seletor-modal-lista li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.seletor-modal-lista li.ativo {
+  background: var(--ev-button-alt-hover-bg);
+}
+
+.seletor-modal-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: var(--ev-c-gray-3);
+  font-size: 12px;
+}
+
+.seletor-modal-sublabel {
+  margin-left: auto;
+  color: var(--ev-c-text-2);
+  font-size: 12px;
+}
+
+.seletor-modal-vazio {
+  color: var(--ev-c-text-2);
+  padding: 8px 10px;
+}
+
+.seletor-modal-rodape {
+  font-size: 12px;
+  color: var(--ev-c-text-2);
 }
 
 .cupom {

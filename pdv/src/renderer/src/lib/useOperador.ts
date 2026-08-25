@@ -20,7 +20,8 @@ export function useOperador(session: Session | null) {
       .select('id, nome, papel, ativo')
       .eq('id', session.user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error('useOperador: falha ao buscar operador', error)
         setOperador(data as Operador | null)
         setLoading(false)
       })

@@ -2,9 +2,18 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { SupervisorModal } from '../components/SupervisorModal'
-import { SeletorCliente } from '../components/SeletorCliente'
+import { SeletorModal } from '../components/SeletorModal'
+import { DescontoModal } from '../components/DescontoModal'
+import { PagamentoModal } from '../components/PagamentoModal'
 import { Cupom } from '../components/Cupom'
-import type { CaixaSessao, FormaPagamento, ItemCarrinho, Operador, Pagamento, Produto } from '../types'
+import type {
+  CaixaSessao,
+  FormaPagamento,
+  ItemCarrinho,
+  Operador,
+  Pagamento,
+  Produto,
+} from '../types'
 
 const rotuloForma: Record<FormaPagamento, string> = {
   dinheiro: 'Dinheiro',
@@ -26,6 +35,8 @@ interface ClienteResumo {
   telefone: string | null
 }
 
+type Modo = null | 'busca-produto' | 'desconto' | 'supervisor' | 'cliente' | 'pagamento'
+
 function moeda(valor: number) {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
@@ -39,16 +50,17 @@ export function VendaPage({ operador, caixaSessao }: Props) {
 
   const [itens, setItens] = useState<ItemCarrinho[]>([])
   const [cliente, setCliente] = useState<ClienteResumo | null>(null)
+  const [clienteResultados, setClienteResultados] = useState<ClienteResumo[]>([])
+
+  const [buscaProdutoQuery, setBuscaProdutoQuery] = useState('')
 
   const [desconto, setDesconto] = useState(0)
   const [descontoAutorizadoPor, setDescontoAutorizadoPor] = useState<string | null>(null)
-  const [pedindoDescontoValor, setPedindoDescontoValor] = useState(false)
-  const [valorDescontoInput, setValorDescontoInput] = useState('')
-  const [mostrarModalSupervisor, setMostrarModalSupervisor] = useState(false)
+  const [valorDescontoPendente, setValorDescontoPendente] = useState(0)
 
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([])
-  const [formaAtual, setFormaAtual] = useState<FormaPagamento>('dinheiro')
-  const [valorPagamentoInput, setValorPagamentoInput] = useState('')
+
+  const [modo, setModo] = useState<Modo>(null)
 
   const [finalizando, setFinalizando] = useState(false)
   const [erroFinalizar, setErroFinalizar] = useState<string | null>(null)
@@ -62,22 +74,66 @@ export function VendaPage({ operador, caixaSessao }: Props) {
 
   const inputCodigoRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
+  function carregarProdutos() {
     supabase
       .from('produtos')
       .select('*')
       .eq('ativo', true)
       .then(({ data }) => setProdutos((data as Produto[]) ?? []))
+  }
+
+  useEffect(() => {
+    carregarProdutos()
   }, [])
 
   useEffect(() => {
-    inputCodigoRef.current?.focus()
-  })
+    if (modo === null && !produtoPesoPendente) inputCodigoRef.current?.focus()
+  }, [modo, produtoPesoPendente])
 
   const subtotal = itens.reduce((soma, item) => soma + item.quantidade * item.produto.preco, 0)
   const total = Math.max(0, subtotal - desconto)
   const totalPago = pagamentos.reduce((soma, p) => soma + p.valor, 0)
   const restante = Math.round((total - totalPago) * 100) / 100
+
+  // Atalhos de teclado: as ações secundárias (produto sem código, desconto,
+  // cliente, pagamento) nao usam mouse - o operador nao tira a mao do
+  // teclado/leitor durante o atendimento.
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (vendaConcluida) return
+
+      if (modo !== null) {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          setModo(null)
+        }
+        return
+      }
+
+      if (event.key === 'F2') {
+        event.preventDefault()
+        setBuscaProdutoQuery('')
+        setModo('busca-produto')
+      } else if (event.key === 'F3') {
+        event.preventDefault()
+        if (itens.length > 0) setModo('desconto')
+      } else if (event.key === 'F4') {
+        event.preventDefault()
+        setClienteResultados([])
+        setModo('cliente')
+      } else if (event.key === 'F6') {
+        event.preventDefault()
+        if (itens.length > 0 && restante > 0) setModo('pagamento')
+      } else if (event.key === 'F9') {
+        event.preventDefault()
+        if (itens.length > 0 && restante === 0 && !finalizando) finalizarVenda()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modo, itens, restante, finalizando, vendaConcluida])
 
   function adicionarItem(produto: Produto, quantidade: number) {
     setItens((atual) => {
@@ -93,6 +149,15 @@ export function VendaPage({ operador, caixaSessao }: Props) {
     })
   }
 
+  function selecionarProduto(produto: Produto) {
+    if (produto.unidade === 'kg') {
+      setProdutoPesoPendente(produto)
+    } else {
+      adicionarItem(produto, 1)
+    }
+    setModo(null)
+  }
+
   function handleCodigoSubmit(event: FormEvent) {
     event.preventDefault()
     setErroCodigo(null)
@@ -102,19 +167,13 @@ export function VendaPage({ operador, caixaSessao }: Props) {
     const produto = produtos.find((p) => p.codigo_barras === valor || p.codigo_interno === valor)
 
     if (!produto) {
-      setErroCodigo('Produto não encontrado.')
+      setErroCodigo('Produto não encontrado. F2 para buscar por nome.')
       setCodigo('')
       return
     }
 
-    if (produto.unidade === 'kg') {
-      setProdutoPesoPendente(produto)
-      setCodigo('')
-      return
-    }
-
-    adicionarItem(produto, 1)
     setCodigo('')
+    selecionarProduto(produto)
   }
 
   function confirmarPeso(event: FormEvent) {
@@ -132,24 +191,35 @@ export function VendaPage({ operador, caixaSessao }: Props) {
     setItens((atual) => atual.filter((_, i) => i !== index))
   }
 
-  function iniciarDesconto(event: FormEvent) {
-    event.preventDefault()
-    const valor = Number(valorDescontoInput)
-    if (!valor || valor <= 0 || valor > subtotal) return
-    setMostrarModalSupervisor(true)
+  async function buscarClientes(query: string) {
+    if (query.trim().length < 2) {
+      setClienteResultados([])
+      return
+    }
+    const { data } = await supabase
+      .from('clientes')
+      .select('id, nome, cpf, telefone')
+      .or(`nome.ilike.%${query}%,cpf.ilike.%${query}%`)
+      .eq('ativo', true)
+      .limit(8)
+    setClienteResultados((data as ClienteResumo[]) ?? [])
   }
 
-  function adicionarPagamento(event: FormEvent) {
-    event.preventDefault()
-    const valor = Number(valorPagamentoInput)
-    if (!valor || valor <= 0) return
-    if (formaAtual === 'fiado' && !cliente) {
-      setErroFinalizar('Pagamento fiado exige um cliente selecionado.')
+  function selecionarCliente(id: string) {
+    const encontrado = clienteResultados.find((c) => c.id === id)
+    if (encontrado) setCliente(encontrado)
+    setModo(null)
+  }
+
+  function confirmarPagamento(forma: FormaPagamento, valor: number) {
+    if (forma === 'fiado' && !cliente) {
+      setErroFinalizar('Pagamento fiado exige um cliente selecionado (F4).')
+      setModo(null)
       return
     }
     setErroFinalizar(null)
-    setPagamentos((atual) => [...atual, { forma: formaAtual, valor }])
-    setValorPagamentoInput('')
+    setPagamentos((atual) => [...atual, { forma, valor }])
+    setModo(null)
   }
 
   function removerPagamento(index: number) {
@@ -189,21 +259,27 @@ export function VendaPage({ operador, caixaSessao }: Props) {
     setCliente(null)
     setDesconto(0)
     setDescontoAutorizadoPor(null)
-    setValorDescontoInput('')
     setPagamentos([])
-    setValorPagamentoInput('')
     setVendaConcluida(null)
-    // recarrega catalogo para refletir estoque atualizado pela venda anterior
-    supabase
-      .from('produtos')
-      .select('*')
-      .eq('ativo', true)
-      .then(({ data }) => setProdutos((data as Produto[]) ?? []))
+    setModo(null)
+    carregarProdutos()
   }
 
   if (vendaConcluida) {
     return <Cupom {...vendaConcluida} onFechar={novaVenda} />
   }
+
+  const produtosFiltrados = produtos
+    .filter((p) => {
+      const q = buscaProdutoQuery.trim().toLowerCase()
+      if (!q) return true
+      return (
+        p.nome.toLowerCase().includes(q) ||
+        p.codigo_interno.toLowerCase().includes(q) ||
+        (p.codigo_barras ?? '').toLowerCase().includes(q)
+      )
+    })
+    .slice(0, 8)
 
   return (
     <div className="venda-page">
@@ -215,6 +291,7 @@ export function VendaPage({ operador, caixaSessao }: Props) {
             onChange={(e) => setCodigo(e.target.value)}
             placeholder="Código de barras / código interno"
             autoFocus
+            disabled={modo !== null || !!produtoPesoPendente}
           />
         </form>
         {erroCodigo && <p className="erro">{erroCodigo}</p>}
@@ -230,10 +307,16 @@ export function VendaPage({ operador, caixaSessao }: Props) {
               onChange={(e) => setPeso(e.target.value)}
               autoFocus
               required
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setProdutoPesoPendente(null)
+                  setPeso('')
+                }
+              }}
             />
             <button type="submit">Adicionar</button>
             <button type="button" onClick={() => setProdutoPesoPendente(null)}>
-              Cancelar
+              Cancelar (Esc)
             </button>
           </form>
         )}
@@ -275,7 +358,16 @@ export function VendaPage({ operador, caixaSessao }: Props) {
       </div>
 
       <aside className="venda-lateral">
-        <SeletorCliente clienteSelecionado={cliente} onSelecionar={setCliente} />
+        {cliente ? (
+          <div className="venda-cliente-selecionado">
+            <span>Cliente: {cliente.nome}</span>
+            <button type="button" onClick={() => setCliente(null)}>
+              Remover
+            </button>
+          </div>
+        ) : (
+          <p className="venda-cliente-vazio">Sem cliente (F4 para selecionar)</p>
+        )}
 
         <div className="venda-totais">
           <div>
@@ -292,48 +384,7 @@ export function VendaPage({ operador, caixaSessao }: Props) {
           </div>
         </div>
 
-        {!pedindoDescontoValor ? (
-          <button type="button" onClick={() => setPedindoDescontoValor(true)} disabled={itens.length === 0}>
-            Aplicar desconto
-          </button>
-        ) : (
-          <form onSubmit={iniciarDesconto} className="venda-desconto-form">
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="Valor do desconto"
-              value={valorDescontoInput}
-              onChange={(e) => setValorDescontoInput(e.target.value)}
-              autoFocus
-            />
-            <button type="submit">Confirmar</button>
-            <button type="button" onClick={() => setPedindoDescontoValor(false)}>
-              Cancelar
-            </button>
-          </form>
-        )}
-
         <h3>Pagamento</h3>
-        <form onSubmit={adicionarPagamento} className="venda-pagamento-form">
-          <select value={formaAtual} onChange={(e) => setFormaAtual(e.target.value as FormaPagamento)}>
-            {Object.entries(rotuloForma).map(([valor, rotulo]) => (
-              <option key={valor} value={valor}>
-                {rotulo}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Valor"
-            value={valorPagamentoInput}
-            onChange={(e) => setValorPagamentoInput(e.target.value)}
-          />
-          <button type="submit">Adicionar pagamento</button>
-        </form>
-
         <ul className="venda-pagamentos-lista">
           {pagamentos.map((pagamento, i) => (
             <li key={i}>
@@ -354,20 +405,80 @@ export function VendaPage({ operador, caixaSessao }: Props) {
           onClick={finalizarVenda}
           disabled={itens.length === 0 || restante !== 0 || finalizando}
         >
-          {finalizando ? 'Finalizando...' : 'Finalizar venda'}
+          {finalizando ? 'Finalizando...' : 'Finalizar venda (F9)'}
         </button>
       </aside>
 
-      {mostrarModalSupervisor && (
+      <footer className="venda-atalhos">
+        <span>F2 Buscar produto</span>
+        <span>F3 Desconto</span>
+        <span>F4 Cliente</span>
+        <span>F6 Pagamento</span>
+        <span>F9 Finalizar</span>
+        <span>Esc Cancelar</span>
+      </footer>
+
+      {modo === 'busca-produto' && (
+        <SeletorModal
+          titulo="Buscar produto por nome"
+          placeholder="Digite o nome do produto"
+          itens={produtosFiltrados.map((p) => ({
+            id: p.id,
+            label: p.nome,
+            sublabel: `${p.unidade === 'kg' ? 'kg' : 'un'} · ${moeda(p.preco)}`,
+          }))}
+          onQueryChange={setBuscaProdutoQuery}
+          onSelecionar={(id) => {
+            const produto = produtos.find((p) => p.id === id)
+            if (produto) selecionarProduto(produto)
+          }}
+          onFechar={() => setModo(null)}
+        />
+      )}
+
+      {modo === 'cliente' && (
+        <SeletorModal
+          titulo="Selecionar cliente"
+          placeholder="Nome ou CPF (mín. 2 letras)"
+          itens={clienteResultados.map((c) => ({
+            id: c.id,
+            label: c.nome,
+            sublabel: c.cpf ?? undefined,
+          }))}
+          onQueryChange={buscarClientes}
+          onSelecionar={selecionarCliente}
+          onFechar={() => setModo(null)}
+        />
+      )}
+
+      {modo === 'desconto' && (
+        <DescontoModal
+          subtotal={subtotal}
+          onFechar={() => setModo(null)}
+          onConfirmar={(valor) => {
+            setValorDescontoPendente(valor)
+            setModo('supervisor')
+          }}
+        />
+      )}
+
+      {modo === 'supervisor' && (
         <SupervisorModal
           titulo="Autorizar desconto"
-          onCancelar={() => setMostrarModalSupervisor(false)}
+          onCancelar={() => setModo(null)}
           onAutorizado={(supervisorId) => {
-            setDesconto(Number(valorDescontoInput))
+            setDesconto(valorDescontoPendente)
             setDescontoAutorizadoPor(supervisorId)
-            setMostrarModalSupervisor(false)
-            setPedindoDescontoValor(false)
+            setModo(null)
           }}
+        />
+      )}
+
+      {modo === 'pagamento' && (
+        <PagamentoModal
+          restante={Math.max(0, restante)}
+          onFechar={() => setModo(null)}
+          onConfirmar={confirmarPagamento}
         />
       )}
     </div>
