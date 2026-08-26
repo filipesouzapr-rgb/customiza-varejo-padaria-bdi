@@ -7,7 +7,9 @@ export function AppLayout() {
       <header className="app-header">
         <span className="app-titulo">Padaria BDI</span>
         <nav>
+          <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/produtos">Produtos</NavLink>
+          <NavLink to="/fiado">Fiado</NavLink>
         </nav>
         <button type="button" onClick={() => supabase.auth.signOut()}>
           Sair

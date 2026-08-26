@@ -147,3 +147,85 @@ tr.inativo {
 .erro {
   color: #d33;
 }
+
+.fiado-page {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.fiado-lista {
+  width: 320px;
+}
+
+.fiado-lista tbody tr {
+  cursor: pointer;
+}
+
+.fiado-lista tbody tr.selecionado {
+  background: var(--accent-bg);
+}
+
+.fiado-detalhe {
+  flex: 1;
+  min-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fiado-saldo-atual {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.fiado-periodo {
+  display: flex;
+  gap: 16px;
+}
+
+.fiado-form-pagamento {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-cards {
+  display: flex;
+  gap: 16px;
+}
+
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  min-width: 200px;
+}
+
+.dashboard-card-titulo {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.dashboard-card-valor {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.dashboard-card-sub {
+  font-size: 12px;
+  color: var(--text);
+}
