@@ -202,7 +202,15 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
     const valor = codigo.trim()
     if (!valor) return
 
-    const produto = produtos.find((p) => p.codigo_barras === valor || p.codigo_interno === valor)
+    // Aceita "5x<codigo>" ou "5*<codigo>" pra lançar varias unidades de
+    // uma vez, sem precisar escanear o mesmo item repetidas vezes.
+    const match = valor.match(/^(\d+(?:[.,]\d+)?)\s*[xX*]\s*(.+)$/)
+    const quantidadeInformada = match ? Number(match[1].replace(',', '.')) : null
+    const codigoBuscado = match ? match[2].trim() : valor
+
+    const produto = produtos.find(
+      (p) => p.codigo_barras === codigoBuscado || p.codigo_interno === codigoBuscado,
+    )
 
     if (!produto) {
       setErroCodigo('Produto não encontrado. F2 para buscar por nome.')
@@ -211,6 +219,12 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
     }
 
     setCodigo('')
+
+    if (quantidadeInformada && quantidadeInformada > 0) {
+      adicionarItem(produto, quantidadeInformada)
+      return
+    }
+
     selecionarProduto(produto)
   }
 
@@ -413,7 +427,7 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
             ref={inputCodigoRef}
             value={codigo}
             onChange={(e) => setCodigo(e.target.value)}
-            placeholder="Código de barras / código interno"
+            placeholder="Código de barras / interno — ou 5x<código> para quantidade"
             autoFocus
             disabled={modo !== null || !!produtoPesoPendente}
           />
