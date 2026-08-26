@@ -20,7 +20,7 @@ const rotuloForma: Record<FormaPagamento, string> = {
   cartao_debito: 'Cartão débito',
   cartao_credito: 'Cartão crédito',
   pix: 'Pix',
-  fiado: 'Fiado',
+  fiado: 'Outros',
 }
 
 interface Props {
@@ -105,7 +105,8 @@ export function VendaPage({ operador, caixaSessao }: Props) {
       if (modo !== null) {
         if (event.key === 'Escape') {
           event.preventDefault()
-          setModo(null)
+          if (modo === 'pagamento') cancelarCheckout()
+          else setModo(null)
         }
         return
       }
@@ -121,19 +122,16 @@ export function VendaPage({ operador, caixaSessao }: Props) {
         event.preventDefault()
         setClienteResultados([])
         setModo('cliente')
-      } else if (event.key === 'F6') {
-        event.preventDefault()
-        if (itens.length > 0 && restante > 0) setModo('pagamento')
       } else if (event.key === 'F9') {
         event.preventDefault()
-        if (itens.length > 0 && restante === 0 && !finalizando) finalizarVenda()
+        iniciarCheckout()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modo, itens, restante, finalizando, vendaConcluida])
+  }, [modo, itens, finalizando, vendaConcluida])
 
   function adicionarItem(produto: Produto, quantidade: number) {
     setItens((atual) => {
@@ -211,22 +209,46 @@ export function VendaPage({ operador, caixaSessao }: Props) {
     setModo(null)
   }
 
-  function confirmarPagamento(forma: FormaPagamento, valor: number) {
-    if (forma === 'fiado' && !cliente) {
-      setErroFinalizar('Pagamento fiado exige um cliente selecionado (F4).')
-      setModo(null)
+  function validarForma(forma: FormaPagamento): string | null {
+    if (forma === 'fiado' && !cliente) return 'Pagamento "Outros" exige um cliente selecionado (F4).'
+    return null
+  }
+
+  function iniciarCheckout() {
+    if (itens.length === 0 || finalizando) return
+    setErroFinalizar(null)
+    if (total <= 0) {
+      finalizarVenda([])
       return
     }
-    setErroFinalizar(null)
-    setPagamentos((atual) => [...atual, { forma, valor }])
+    setModo('pagamento')
+  }
+
+  function cancelarCheckout() {
+    setPagamentos([])
     setModo(null)
+  }
+
+  function confirmarPagamento(forma: FormaPagamento, valor: number) {
+    const novosPagamentos = [...pagamentos, { forma, valor }]
+    setPagamentos(novosPagamentos)
+
+    const novoTotalPago = novosPagamentos.reduce((soma, p) => soma + p.valor, 0)
+    const restanteAtual = Math.round((total - novoTotalPago) * 100) / 100
+
+    if (restanteAtual <= 0) {
+      setModo(null)
+      finalizarVenda(novosPagamentos)
+    }
+    // se ainda falta, o modal de pagamento continua aberto (troca de key
+    // reinicia pro passo de escolher a forma) mostrando quanto falta
   }
 
   function removerPagamento(index: number) {
     setPagamentos((atual) => atual.filter((_, i) => i !== index))
   }
 
-  async function finalizarVenda() {
+  async function finalizarVenda(pagamentosFinal: Pagamento[]) {
     setErroFinalizar(null)
     setFinalizando(true)
 
@@ -239,7 +261,7 @@ export function VendaPage({ operador, caixaSessao }: Props) {
         quantidade: i.quantidade,
         preco_unitario: i.produto.preco,
       })),
-      p_pagamentos: pagamentos,
+      p_pagamentos: pagamentosFinal,
       p_desconto: desconto,
       p_desconto_autorizado_por: descontoAutorizadoPor,
     })
@@ -251,7 +273,7 @@ export function VendaPage({ operador, caixaSessao }: Props) {
       return
     }
 
-    setVendaConcluida({ itens, pagamentos, subtotal, desconto, total })
+    setVendaConcluida({ itens, pagamentos: pagamentosFinal, subtotal, desconto, total })
   }
 
   function novaVenda() {
@@ -400,11 +422,7 @@ export function VendaPage({ operador, caixaSessao }: Props) {
         <p>Restante: {moeda(Math.max(0, restante))}</p>
         {erroFinalizar && <p className="erro">{erroFinalizar}</p>}
 
-        <button
-          type="button"
-          onClick={finalizarVenda}
-          disabled={itens.length === 0 || restante !== 0 || finalizando}
-        >
+        <button type="button" onClick={iniciarCheckout} disabled={itens.length === 0 || finalizando}>
           {finalizando ? 'Finalizando...' : 'Finalizar venda (F9)'}
         </button>
       </aside>
@@ -413,8 +431,7 @@ export function VendaPage({ operador, caixaSessao }: Props) {
         <span>F2 Buscar produto</span>
         <span>F3 Desconto</span>
         <span>F4 Cliente</span>
-        <span>F6 Pagamento</span>
-        <span>F9 Finalizar</span>
+        <span>F9 Pagamento/Finalizar</span>
         <span>Esc Cancelar</span>
       </footer>
 
@@ -476,8 +493,11 @@ export function VendaPage({ operador, caixaSessao }: Props) {
 
       {modo === 'pagamento' && (
         <PagamentoModal
+          key={pagamentos.length}
           restante={Math.max(0, restante)}
-          onFechar={() => setModo(null)}
+          mensagemTopo={pagamentos.length > 0 ? `Falta ${moeda(Math.max(0, restante))} — escolha a forma de pagamento` : undefined}
+          validarForma={validarForma}
+          onFechar={cancelarCheckout}
           onConfirmar={confirmarPagamento}
         />
       )}

@@ -241,6 +241,13 @@ td {
   padding: 8px 10px;
 }
 
+.seletor-modal-aviso {
+  background: var(--ev-c-gray-3);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
 .seletor-modal-rodape {
   font-size: 12px;
   color: var(--ev-c-text-2);

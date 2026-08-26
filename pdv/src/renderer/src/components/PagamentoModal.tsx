@@ -8,17 +8,20 @@ const formas: { forma: FormaPagamento; label: string }[] = [
   { forma: 'cartao_debito', label: 'Cartão débito' },
   { forma: 'cartao_credito', label: 'Cartão crédito' },
   { forma: 'pix', label: 'Pix' },
-  { forma: 'fiado', label: 'Fiado' },
+  { forma: 'fiado', label: 'Outros' },
 ]
 
 interface Props {
   restante: number
+  mensagemTopo?: string
+  validarForma?: (forma: FormaPagamento) => string | null
   onConfirmar: (forma: FormaPagamento, valor: number) => void
   onFechar: () => void
 }
 
-export function PagamentoModal({ restante, onConfirmar, onFechar }: Props) {
+export function PagamentoModal({ restante, mensagemTopo, validarForma, onConfirmar, onFechar }: Props) {
   const [formaEscolhida, setFormaEscolhida] = useState<FormaPagamento | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
   const [valor, setValor] = useState(restante > 0 ? String(restante) : '')
   const inputValorRef = useRef<HTMLInputElement>(null)
 
@@ -28,6 +31,16 @@ export function PagamentoModal({ restante, onConfirmar, onFechar }: Props) {
       inputValorRef.current?.select()
     }
   }, [formaEscolhida])
+
+  function escolherForma(forma: FormaPagamento) {
+    const erroValidacao = validarForma?.(forma)
+    if (erroValidacao) {
+      setErro(erroValidacao)
+      return
+    }
+    setErro(null)
+    setFormaEscolhida(forma)
+  }
 
   function handleKeyDownValor(event: KeyboardEvent) {
     if (event.key === 'Escape') {
@@ -49,8 +62,10 @@ export function PagamentoModal({ restante, onConfirmar, onFechar }: Props) {
         titulo="Forma de pagamento"
         comBusca={false}
         itens={formas.map((f) => ({ id: f.forma, label: f.label }))}
-        onSelecionar={(id) => setFormaEscolhida(id as FormaPagamento)}
+        onSelecionar={(id) => escolherForma(id as FormaPagamento)}
         onFechar={onFechar}
+        aviso={mensagemTopo}
+        erro={erro}
         rodape="1-5 escolher · ↑↓ Enter · Esc cancelar"
       />
     )
@@ -61,7 +76,7 @@ export function PagamentoModal({ restante, onConfirmar, onFechar }: Props) {
       <form onSubmit={handleSubmitValor} className="modal-caixa">
         <h2>{formas.find((f) => f.forma === formaEscolhida)?.label}</h2>
         <label>
-          Valor
+          Valor a pagar nessa forma
           <input
             ref={inputValorRef}
             type="number"

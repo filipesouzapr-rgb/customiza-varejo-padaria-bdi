@@ -16,6 +16,8 @@ interface Props {
   onSelecionar: (id: string) => void
   onFechar: () => void
   rodape?: string
+  aviso?: string
+  erro?: string | null
 }
 
 export function SeletorModal({
@@ -27,6 +29,8 @@ export function SeletorModal({
   onSelecionar,
   onFechar,
   rodape,
+  aviso,
+  erro,
 }: Props) {
   const [indice, setIndice] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -73,6 +77,8 @@ export function SeletorModal({
     <div className="modal-fundo">
       <div className="modal-caixa seletor-modal" onKeyDown={handleKeyDown} tabIndex={-1} ref={containerRef}>
         <h2>{titulo}</h2>
+        {aviso && <p className="seletor-modal-aviso">{aviso}</p>}
+        {erro && <p className="erro">{erro}</p>}
         {comBusca && (
           <input
             ref={inputRef}
