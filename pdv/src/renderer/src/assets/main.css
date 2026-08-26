@@ -115,6 +115,7 @@ td {
   display: flex;
   gap: 24px;
   padding: 16px;
+  padding-bottom: 48px;
 }
 
 .venda-principal {
@@ -183,6 +184,57 @@ td {
 }
 
 .venda-cliente-vazio {
+  font-size: 13px;
+  color: var(--ev-c-text-2);
+}
+
+.painel-identificacao {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--ev-c-black-soft);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+}
+
+.painel-identificacao-logo {
+  background: var(--ev-c-white);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.painel-identificacao-logo img {
+  height: 28px;
+  display: block;
+}
+
+.painel-identificacao-estabelecimento {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.painel-identificacao-operador {
+  font-size: 13px;
+  color: var(--ev-c-text-2);
+}
+
+.painel-identificacao-relogio {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.painel-identificacao-hora {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.painel-identificacao-data {
   font-size: 13px;
   color: var(--ev-c-text-2);
 }

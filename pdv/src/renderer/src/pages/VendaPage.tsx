@@ -5,6 +5,7 @@ import { SupervisorModal } from '../components/SupervisorModal'
 import { SeletorModal } from '../components/SeletorModal'
 import { DescontoModal } from '../components/DescontoModal'
 import { PagamentoModal } from '../components/PagamentoModal'
+import { PainelIdentificacao } from '../components/PainelIdentificacao'
 import { Cupom } from '../components/Cupom'
 import type {
   CaixaSessao,
@@ -425,6 +426,8 @@ export function VendaPage({ operador, caixaSessao }: Props) {
         <button type="button" onClick={iniciarCheckout} disabled={itens.length === 0 || finalizando}>
           {finalizando ? 'Finalizando...' : 'Finalizar venda (F9)'}
         </button>
+
+        <PainelIdentificacao operadorNome={operador.nome} />
       </aside>
 
       <footer className="venda-atalhos">
