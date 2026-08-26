@@ -10,6 +10,39 @@ body {
   flex-direction: column;
 }
 
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--ev-c-gray-3);
+  flex-shrink: 0;
+}
+
+.app-header-logo {
+  background: var(--ev-c-white);
+  border-radius: 4px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+}
+
+.app-header-logo img {
+  height: 22px;
+  display: block;
+}
+
+.app-header-estabelecimento {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.app-header-operador {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--ev-c-text-2);
+}
+
 .tela-central {
   flex: 1;
   display: flex;

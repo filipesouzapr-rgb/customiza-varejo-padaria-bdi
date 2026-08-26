@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from './lib/useSession'
 import { useOperador } from './lib/useOperador'
 import { supabase } from './lib/supabase'
+import { AppHeader } from './components/AppHeader'
 import { LoginPage } from './pages/LoginPage'
 import { AbrirCaixaPage } from './pages/AbrirCaixaPage'
 import { VendaPage } from './pages/VendaPage'
@@ -35,21 +36,28 @@ function App(): React.JSX.Element | null {
 
   if (carregandoSessao || carregandoOperador || carregandoCaixa) return null
 
-  if (!session) return <LoginPage />
+  let conteudo: React.JSX.Element
 
-  if (!operador) {
-    return (
+  if (!session) {
+    conteudo = <LoginPage />
+  } else if (!operador) {
+    conteudo = (
       <div className="tela-central">
         <p>Este usuário não tem um perfil de operador cadastrado. Fale com o dono.</p>
       </div>
     )
+  } else if (!caixaSessao) {
+    conteudo = <AbrirCaixaPage operadorId={operador.id} onAberta={setCaixaSessao} />
+  } else {
+    conteudo = <VendaPage operador={operador} caixaSessao={caixaSessao} />
   }
 
-  if (!caixaSessao) {
-    return <AbrirCaixaPage operadorId={operador.id} onAberta={setCaixaSessao} />
-  }
-
-  return <VendaPage operador={operador} caixaSessao={caixaSessao} />
+  return (
+    <>
+      <AppHeader operadorNome={operador?.nome} />
+      {conteudo}
+    </>
+  )
 }
 
 export default App
