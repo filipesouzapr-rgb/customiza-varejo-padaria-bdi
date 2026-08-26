@@ -280,6 +280,44 @@ td {
   gap: 8px;
 }
 
+.fechar-caixa {
+  width: 380px;
+}
+
+.fechar-caixa-resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--ev-c-black);
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.fechar-caixa-resumo > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.fechar-caixa-esperado {
+  font-weight: 700;
+  border-top: 1px solid var(--ev-c-gray-3);
+  padding-top: 6px;
+  margin-top: 4px;
+}
+
+.venda-erro-flutuante {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ev-c-black-soft);
+  border: 1px solid #ff8080;
+  padding: 8px 16px;
+  border-radius: 6px;
+  z-index: 20;
+}
+
 .seletor-modal {
   width: 420px;
 }

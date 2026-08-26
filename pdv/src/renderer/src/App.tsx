@@ -68,7 +68,13 @@ function App(): React.JSX.Element | null {
   // Na tela de venda o painel de identificacao (logo/estabelecimento/
   // operador/relogio) fica embutido na lateral, entao o cabecalho do topo
   // nao aparece aqui.
-  return <VendaPage operador={operador} caixaSessao={caixaSessao} />
+  return (
+    <VendaPage
+      operador={operador}
+      caixaSessao={caixaSessao}
+      onCaixaFechado={() => setCaixaSessao(null)}
+    />
+  )
 }
 
 export default App

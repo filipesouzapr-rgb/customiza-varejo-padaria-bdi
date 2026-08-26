@@ -6,6 +6,9 @@ import { SeletorModal } from '../components/SeletorModal'
 import { DescontoModal } from '../components/DescontoModal'
 import { PagamentoModal } from '../components/PagamentoModal'
 import { PainelIdentificacao } from '../components/PainelIdentificacao'
+import { MovimentoCaixaModal } from '../components/MovimentoCaixaModal'
+import type { TipoMovimento } from '../components/MovimentoCaixaModal'
+import { FecharCaixaModal } from '../components/FecharCaixaModal'
 import { Cupom } from '../components/Cupom'
 import type {
   CaixaSessao,
@@ -27,6 +30,7 @@ const rotuloForma: Record<FormaPagamento, string> = {
 interface Props {
   operador: Operador
   caixaSessao: CaixaSessao
+  onCaixaFechado: () => void
 }
 
 interface ClienteResumo {
@@ -36,13 +40,33 @@ interface ClienteResumo {
   telefone: string | null
 }
 
-type Modo = null | 'busca-produto' | 'desconto' | 'supervisor' | 'cliente' | 'pagamento'
+interface VendaCancelavel {
+  id: string
+  total: number
+  finalizada_em: string
+}
+
+type Modo =
+  | null
+  | 'busca-produto'
+  | 'desconto'
+  | 'supervisor'
+  | 'cliente'
+  | 'pagamento'
+  | 'movimento-caixa'
+  | 'cancelar-venda'
+  | 'fechar-caixa'
+
+type ContextoSupervisor =
+  | { tipo: 'desconto'; valor: number }
+  | { tipo: 'movimento'; movTipo: TipoMovimento; valor: number; motivo: string }
+  | { tipo: 'cancelar-venda'; vendaId: string }
 
 function moeda(valor: number) {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-export function VendaPage({ operador, caixaSessao }: Props) {
+export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [codigo, setCodigo] = useState('')
   const [erroCodigo, setErroCodigo] = useState<string | null>(null)
@@ -57,11 +81,13 @@ export function VendaPage({ operador, caixaSessao }: Props) {
 
   const [desconto, setDesconto] = useState(0)
   const [descontoAutorizadoPor, setDescontoAutorizadoPor] = useState<string | null>(null)
-  const [valorDescontoPendente, setValorDescontoPendente] = useState(0)
 
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([])
 
   const [modo, setModo] = useState<Modo>(null)
+  const [contextoSupervisor, setContextoSupervisor] = useState<ContextoSupervisor | null>(null)
+  const [vendasCancelaveis, setVendasCancelaveis] = useState<VendaCancelavel[]>([])
+  const [erroAcaoCaixa, setErroAcaoCaixa] = useState<string | null>(null)
 
   const [finalizando, setFinalizando] = useState(false)
   const [erroFinalizar, setErroFinalizar] = useState<string | null>(null)
@@ -107,7 +133,10 @@ export function VendaPage({ operador, caixaSessao }: Props) {
         if (event.key === 'Escape') {
           event.preventDefault()
           if (modo === 'pagamento') cancelarCheckout()
-          else setModo(null)
+          else {
+            setContextoSupervisor(null)
+            setModo(null)
+          }
         }
         return
       }
@@ -123,6 +152,16 @@ export function VendaPage({ operador, caixaSessao }: Props) {
         event.preventDefault()
         setClienteResultados([])
         setModo('cliente')
+      } else if (event.key === 'F5') {
+        event.preventDefault()
+        setErroAcaoCaixa(null)
+        setModo('movimento-caixa')
+      } else if (event.key === 'F7') {
+        event.preventDefault()
+        abrirCancelarVenda()
+      } else if (event.key === 'F8') {
+        event.preventDefault()
+        setModo('fechar-caixa')
       } else if (event.key === 'F9') {
         event.preventDefault()
         iniciarCheckout()
@@ -247,6 +286,68 @@ export function VendaPage({ operador, caixaSessao }: Props) {
 
   function removerPagamento(index: number) {
     setPagamentos((atual) => atual.filter((_, i) => i !== index))
+  }
+
+  async function abrirCancelarVenda() {
+    setErroAcaoCaixa(null)
+    const limite = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+    const { data, error } = await supabase
+      .from('vendas')
+      .select('id, total, finalizada_em')
+      .eq('caixa_sessao_id', caixaSessao.id)
+      .eq('status', 'finalizada')
+      .gte('finalizada_em', limite)
+      .order('finalizada_em', { ascending: false })
+
+    if (error) {
+      setErroAcaoCaixa(error.message)
+      return
+    }
+
+    setVendasCancelaveis((data as VendaCancelavel[]) ?? [])
+    setModo('cancelar-venda')
+  }
+
+  function selecionarVendaParaCancelar(vendaId: string) {
+    setContextoSupervisor({ tipo: 'cancelar-venda', vendaId })
+    setModo('supervisor')
+  }
+
+  function confirmarMovimentoCaixa(movTipo: TipoMovimento, valor: number, motivo: string) {
+    setContextoSupervisor({ tipo: 'movimento', movTipo, valor, motivo })
+    setModo('supervisor')
+  }
+
+  async function autorizarSupervisor(supervisorId: string) {
+    if (!contextoSupervisor) {
+      setModo(null)
+      return
+    }
+
+    if (contextoSupervisor.tipo === 'desconto') {
+      setDesconto(contextoSupervisor.valor)
+      setDescontoAutorizadoPor(supervisorId)
+      setModo(null)
+    } else if (contextoSupervisor.tipo === 'movimento') {
+      const { error } = await supabase.from('caixa_movimentos').insert({
+        caixa_sessao_id: caixaSessao.id,
+        tipo: contextoSupervisor.movTipo,
+        valor: contextoSupervisor.valor,
+        motivo: contextoSupervisor.motivo || null,
+      })
+      if (error) setErroAcaoCaixa(error.message)
+      setModo(null)
+    } else if (contextoSupervisor.tipo === 'cancelar-venda') {
+      const { error } = await supabase.rpc('cancelar_venda', {
+        p_venda_id: contextoSupervisor.vendaId,
+        p_cancelado_por: supervisorId,
+      })
+      if (error) setErroAcaoCaixa(error.message)
+      else carregarProdutos()
+      setModo(null)
+    }
+
+    setContextoSupervisor(null)
   }
 
   async function finalizarVenda(pagamentosFinal: Pagamento[]) {
@@ -434,6 +535,9 @@ export function VendaPage({ operador, caixaSessao }: Props) {
         <span>F2 Buscar produto</span>
         <span>F3 Desconto</span>
         <span>F4 Cliente</span>
+        <span>F5 Sangria/Suprimento</span>
+        <span>F7 Cancelar venda</span>
+        <span>F8 Fechar caixa</span>
         <span>F9 Pagamento/Finalizar</span>
         <span>Esc Cancelar</span>
       </footer>
@@ -476,23 +580,63 @@ export function VendaPage({ operador, caixaSessao }: Props) {
           subtotal={subtotal}
           onFechar={() => setModo(null)}
           onConfirmar={(valor) => {
-            setValorDescontoPendente(valor)
+            setContextoSupervisor({ tipo: 'desconto', valor })
             setModo('supervisor')
+          }}
+        />
+      )}
+
+      {modo === 'movimento-caixa' && (
+        <MovimentoCaixaModal onFechar={() => setModo(null)} onConfirmar={confirmarMovimentoCaixa} />
+      )}
+
+      {modo === 'cancelar-venda' && (
+        <SeletorModal
+          titulo="Cancelar venda (últimos 30 min)"
+          comBusca={false}
+          itens={vendasCancelaveis.map((v) => ({
+            id: v.id,
+            label: new Date(v.finalizada_em).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            sublabel: moeda(v.total),
+          }))}
+          onSelecionar={selecionarVendaParaCancelar}
+          onFechar={() => setModo(null)}
+          rodape="↑↓ navegar · Enter selecionar · Esc cancelar"
+        />
+      )}
+
+      {modo === 'fechar-caixa' && (
+        <FecharCaixaModal
+          caixaSessao={caixaSessao}
+          onFechar={() => setModo(null)}
+          onFechada={() => {
+            setModo(null)
+            onCaixaFechado()
           }}
         />
       )}
 
       {modo === 'supervisor' && (
         <SupervisorModal
-          titulo="Autorizar desconto"
-          onCancelar={() => setModo(null)}
-          onAutorizado={(supervisorId) => {
-            setDesconto(valorDescontoPendente)
-            setDescontoAutorizadoPor(supervisorId)
+          titulo={
+            contextoSupervisor?.tipo === 'desconto'
+              ? 'Autorizar desconto'
+              : contextoSupervisor?.tipo === 'movimento'
+                ? `Autorizar ${contextoSupervisor.movTipo === 'sangria' ? 'sangria' : 'suprimento'}`
+                : 'Autorizar cancelamento de venda'
+          }
+          onCancelar={() => {
+            setContextoSupervisor(null)
             setModo(null)
           }}
+          onAutorizado={autorizarSupervisor}
         />
       )}
+
+      {erroAcaoCaixa && <p className="erro venda-erro-flutuante">{erroAcaoCaixa}</p>}
 
       {modo === 'pagamento' && (
         <PagamentoModal
