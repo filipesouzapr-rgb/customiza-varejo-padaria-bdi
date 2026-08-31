@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
+import { NOME_ESTABELECIMENTO } from '../lib/config'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -22,7 +23,7 @@ export function LoginPage() {
   return (
     <div className="tela-central">
       <form onSubmit={handleSubmit} className="form-largo">
-        <h1>PDV — Padaria BDI</h1>
+        <h1>PDV — {NOME_ESTABELECIMENTO}</h1>
         <label>
           E-mail
           <input

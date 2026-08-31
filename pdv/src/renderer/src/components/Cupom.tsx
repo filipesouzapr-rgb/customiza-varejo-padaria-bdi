@@ -1,11 +1,12 @@
 import type { ItemCarrinho, Pagamento } from '../types'
+import { NOME_ESTABELECIMENTO } from '../lib/config'
 
 const rotuloForma: Record<Pagamento['forma'], string> = {
   dinheiro: 'Dinheiro',
   cartao_debito: 'Cartão débito',
   cartao_credito: 'Cartão crédito',
   pix: 'Pix',
-  fiado: 'Fiado',
+  fiado: 'Outros',
 }
 
 interface Props {
@@ -21,7 +22,7 @@ export function Cupom({ itens, pagamentos, subtotal, desconto, total, onFechar }
   return (
     <div className="modal-fundo">
       <div className="cupom">
-        <h2>Padaria BDI</h2>
+        <h2>{NOME_ESTABELECIMENTO}</h2>
         <p className="cupom-aviso">
           Cupom não fiscal — emissão de NFC-e ainda não integrada (fase de homologação)
         </p>

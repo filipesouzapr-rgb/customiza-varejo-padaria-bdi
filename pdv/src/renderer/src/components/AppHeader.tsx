@@ -1,6 +1,5 @@
 import logoCustomiza from '../assets/logo-customiza.png'
-
-const NOME_ESTABELECIMENTO = 'Padaria BDI'
+import { NOME_ESTABELECIMENTO } from '../lib/config'
 
 interface Props {
   operadorNome?: string

@@ -1,7 +1,6 @@
 import logoCustomiza from '../assets/logo-customiza.png'
 import { useRelogio } from '../lib/useRelogio'
-
-const NOME_ESTABELECIMENTO = 'Padaria BDI'
+import { NOME_ESTABELECIMENTO } from '../lib/config'
 
 const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 

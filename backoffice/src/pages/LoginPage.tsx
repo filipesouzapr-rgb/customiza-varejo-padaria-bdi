@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
+import { NOME_ESTABELECIMENTO } from '../lib/config'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -22,7 +23,7 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <form onSubmit={handleSubmit} className="login-form">
-        <h1>Customiza Varejo — Padaria BDI</h1>
+        <h1>Customiza Varejo — {NOME_ESTABELECIMENTO}</h1>
         <label>
           E-mail
           <input
