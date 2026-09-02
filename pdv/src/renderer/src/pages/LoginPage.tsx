@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { NOME_ESTABELECIMENTO } from '../lib/config'
+import { TerminalFrame } from '../components/TerminalFrame'
+import logoCustomiza from '../assets/logo-customiza.png'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -21,33 +23,36 @@ export function LoginPage() {
   }
 
   return (
-    <div className="tela-central">
-      <form onSubmit={handleSubmit} className="form-largo">
-        <h1>PDV — {NOME_ESTABELECIMENTO}</h1>
-        <label>
-          E-mail
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoFocus
-          />
-        </label>
-        <label>
-          Senha
-          <input
-            type="password"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            required
-          />
-        </label>
-        {erro && <p className="erro">{erro}</p>}
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Entrando...' : 'Entrar'}
-        </button>
-      </form>
-    </div>
+    <TerminalFrame titulo="LOGIN">
+      <div className="tela-central">
+        <form onSubmit={handleSubmit} className="form-largo">
+          <img className="login-logo" src={logoCustomiza} alt="Customiza Sistemas" />
+          <h1>PDV — {NOME_ESTABELECIMENTO}</h1>
+          <label>
+            E-mail
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+          </label>
+          <label>
+            Senha
+            <input
+              type="password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              required
+            />
+          </label>
+          {erro && <p className="erro">{erro}</p>}
+          <button type="submit" disabled={enviando}>
+            {enviando ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+      </div>
+    </TerminalFrame>
   )
 }

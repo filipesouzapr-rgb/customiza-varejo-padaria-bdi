@@ -15,10 +15,11 @@ interface Props {
   subtotal: number
   desconto: number
   total: number
+  troco: number
   onFechar: () => void
 }
 
-export function Cupom({ itens, pagamentos, subtotal, desconto, total, onFechar }: Props) {
+export function Cupom({ itens, pagamentos, subtotal, desconto, total, troco, onFechar }: Props) {
   return (
     <div className="modal-fundo">
       <div className="cupom">
@@ -65,6 +66,12 @@ export function Cupom({ itens, pagamentos, subtotal, desconto, total, onFechar }
             </span>
           </div>
         ))}
+        {troco > 0 && (
+          <div className="cupom-linha cupom-total">
+            <span>Troco</span>
+            <span>{troco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+          </div>
+        )}
         <div className="cupom-acoes">
           <button type="button" onClick={() => window.print()}>
             Imprimir

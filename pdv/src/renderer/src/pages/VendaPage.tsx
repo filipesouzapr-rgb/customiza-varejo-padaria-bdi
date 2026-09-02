@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
+import { NOME_ESTABELECIMENTO } from '../lib/config'
+import { useRelogio } from '../lib/useRelogio'
 import { SupervisorModal } from '../components/SupervisorModal'
 import { SeletorModal } from '../components/SeletorModal'
 import { DescontoModal } from '../components/DescontoModal'
 import { PagamentoModal } from '../components/PagamentoModal'
-import { PainelIdentificacao } from '../components/PainelIdentificacao'
 import { MovimentoCaixaModal } from '../components/MovimentoCaixaModal'
 import type { TipoMovimento } from '../components/MovimentoCaixaModal'
 import { FecharCaixaModal } from '../components/FecharCaixaModal'
+import { TerminalFrame } from '../components/TerminalFrame'
 import { Cupom } from '../components/Cupom'
+import logoCustomiza from '../assets/logo-customiza.png'
 import type {
   CaixaSessao,
   FormaPagamento,
@@ -83,6 +86,7 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
   const [descontoAutorizadoPor, setDescontoAutorizadoPor] = useState<string | null>(null)
 
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([])
+  const [troco, setTroco] = useState(0)
 
   const [modo, setModo] = useState<Modo>(null)
   const [contextoSupervisor, setContextoSupervisor] = useState<ContextoSupervisor | null>(null)
@@ -97,9 +101,11 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
     subtotal: number
     desconto: number
     total: number
+    troco: number
   } | null>(null)
 
   const inputCodigoRef = useRef<HTMLInputElement>(null)
+  const agora = useRelogio()
 
   function carregarProdutos() {
     supabase
@@ -272,7 +278,7 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
     if (itens.length === 0 || finalizando) return
     setErroFinalizar(null)
     if (total <= 0) {
-      finalizarVenda([])
+      finalizarVenda([], 0)
       return
     }
     setModo('pagamento')
@@ -280,19 +286,21 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
 
   function cancelarCheckout() {
     setPagamentos([])
+    setTroco(0)
     setModo(null)
   }
 
-  function confirmarPagamento(forma: FormaPagamento, valor: number) {
+  function confirmarPagamento(forma: FormaPagamento, valor: number, trocoRecebido: number) {
     const novosPagamentos = [...pagamentos, { forma, valor }]
     setPagamentos(novosPagamentos)
+    if (trocoRecebido > 0) setTroco(trocoRecebido)
 
     const novoTotalPago = novosPagamentos.reduce((soma, p) => soma + p.valor, 0)
     const restanteAtual = Math.round((total - novoTotalPago) * 100) / 100
 
     if (restanteAtual <= 0) {
       setModo(null)
-      finalizarVenda(novosPagamentos)
+      finalizarVenda(novosPagamentos, trocoRecebido)
     }
     // se ainda falta, o modal de pagamento continua aberto (troca de key
     // reinicia pro passo de escolher a forma) mostrando quanto falta
@@ -364,7 +372,7 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
     setContextoSupervisor(null)
   }
 
-  async function finalizarVenda(pagamentosFinal: Pagamento[]) {
+  async function finalizarVenda(pagamentosFinal: Pagamento[], trocoFinal: number) {
     setErroFinalizar(null)
     setFinalizando(true)
 
@@ -389,7 +397,7 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
       return
     }
 
-    setVendaConcluida({ itens, pagamentos: pagamentosFinal, subtotal, desconto, total })
+    setVendaConcluida({ itens, pagamentos: pagamentosFinal, subtotal, desconto, total, troco: trocoFinal })
   }
 
   function novaVenda() {
@@ -398,6 +406,7 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
     setDesconto(0)
     setDescontoAutorizadoPor(null)
     setPagamentos([])
+    setTroco(0)
     setVendaConcluida(null)
     setModo(null)
     carregarProdutos()
@@ -419,142 +428,202 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
     })
     .slice(0, 8)
 
+  const dataHora = `${String(agora.getDate()).padStart(2, '0')}/${String(agora.getMonth() + 1).padStart(2, '0')}/${agora.getFullYear()} ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+
   return (
-    <div className="venda-page">
-      <div className="venda-principal">
-        <form onSubmit={handleCodigoSubmit} className="venda-scan">
-          <input
-            ref={inputCodigoRef}
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-            placeholder="Código de barras / interno — ou 5x<código> para quantidade"
-            autoFocus
-            disabled={modo !== null || !!produtoPesoPendente}
-          />
-        </form>
-        {erroCodigo && <p className="erro">{erroCodigo}</p>}
+    <>
+      <TerminalFrame
+        titulo="VENDA"
+        rodape={
+          <div className="statusbar">
+            <span className="item">
+              <span className="k">Loja</span>
+              <span className="v">{NOME_ESTABELECIMENTO}</span>
+            </span>
+            <span className="item">
+              <span className="k">Operador</span>
+              <span className="v">{operador.nome}</span>
+            </span>
+            <span className="item">
+              <span className="k">Data</span>
+              <span className="v">{dataHora}</span>
+            </span>
+            <span className="shortcuts">
+              <span>
+                <span className="key">F2</span>Produto
+              </span>
+              <span>
+                <span className="key">F3</span>Desconto
+              </span>
+              <span>
+                <span className="key">F4</span>Cliente
+              </span>
+              <span>
+                <span className="key">F5</span>Sangria/Suprim.
+              </span>
+              <span>
+                <span className="key">F7</span>Cancelar
+              </span>
+              <span>
+                <span className="key">F8</span>Fechar caixa
+              </span>
+              <span>
+                <span className="key">F9</span>Pagamento
+              </span>
+            </span>
+          </div>
+        }
+      >
+        <div className="col-left">
+          <div className="brand-row">
+            <div className="brand-logo">
+              <img src={logoCustomiza} alt="Customiza Sistemas" />
+              <div>
+                <div className="brand-name">{NOME_ESTABELECIMENTO}</div>
+                <div className="brand-sub">Caixa 01 · NFC-e Homologação</div>
+              </div>
+            </div>
+            <svg className="printer-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="8" width="14" height="7" rx="1" stroke="currentColor" strokeWidth="1.6" />
+              <path d="M7 8V4h10v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <rect x="7" y="15" width="10" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.6" />
+              <line x1="8.5" y1="17.3" x2="15.5" y2="17.3" stroke="currentColor" strokeWidth="1.2" />
+              <line x1="8.5" y1="19" x2="15.5" y2="19" stroke="currentColor" strokeWidth="1.2" />
+            </svg>
+          </div>
 
-        {produtoPesoPendente && (
-          <form onSubmit={confirmarPeso} className="venda-peso">
-            <span>{produtoPesoPendente.nome} — informe o peso (kg)</span>
+          <form onSubmit={handleCodigoSubmit} className="scan-row">
+            <label>Código de barras / interno</label>
             <input
-              type="number"
-              step="0.001"
-              min="0"
-              value={peso}
-              onChange={(e) => setPeso(e.target.value)}
+              ref={inputCodigoRef}
+              className="scan-input"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value)}
               autoFocus
-              required
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  setProdutoPesoPendente(null)
-                  setPeso('')
-                }
-              }}
+              disabled={modo !== null || !!produtoPesoPendente}
             />
-            <button type="submit">Adicionar</button>
-            <button type="button" onClick={() => setProdutoPesoPendente(null)}>
-              Cancelar (Esc)
-            </button>
+            <div className="scan-hint">5x&lt;código&gt; lança quantidade direto — F2 busca por nome</div>
           </form>
-        )}
+          {erroCodigo && <p className="erro">{erroCodigo}</p>}
 
-        <table className="venda-itens">
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Qtd</th>
-              <th>Preço</th>
-              <th>Subtotal</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
+          {produtoPesoPendente && (
+            <form onSubmit={confirmarPeso} className="venda-peso">
+              <span>{produtoPesoPendente.nome} — informe o peso (kg)</span>
+              <input
+                type="number"
+                step="0.001"
+                min="0"
+                value={peso}
+                onChange={(e) => setPeso(e.target.value)}
+                autoFocus
+                required
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setProdutoPesoPendente(null)
+                    setPeso('')
+                  }
+                }}
+              />
+              <button type="submit">Adicionar</button>
+              <button type="button" onClick={() => setProdutoPesoPendente(null)}>
+                Cancelar (Esc)
+              </button>
+            </form>
+          )}
+
+          <div className="cart">
+            <div className="cart-head">
+              <span>Item</span>
+              <span>Descrição</span>
+              <span>Qtd</span>
+              <span>Total</span>
+              <span></span>
+            </div>
             {itens.map((item, i) => (
-              <tr key={i}>
-                <td>{item.produto.nome}</td>
-                <td>
+              <div className="cart-row" key={i}>
+                <span className="cart-num">{String(i + 1).padStart(3, '0')}</span>
+                <span className="cart-desc">
+                  <span className="cart-code">{item.produto.codigo_barras ?? item.produto.codigo_interno}</span>
+                  {item.produto.nome}
+                </span>
+                <span className="cart-qty">
                   {item.quantidade}
                   {item.produto.unidade === 'kg' ? 'kg' : ''}
-                </td>
-                <td>{moeda(item.produto.preco)}</td>
-                <td>{moeda(item.quantidade * item.produto.preco)}</td>
-                <td>
-                  <button type="button" onClick={() => removerItem(i)}>
-                    Remover
-                  </button>
-                </td>
-              </tr>
+                </span>
+                <span className="cart-val">{moeda(item.quantidade * item.produto.preco)}</span>
+                <button type="button" onClick={() => removerItem(i)}>
+                  Remover
+                </button>
+              </div>
             ))}
-            {itens.length === 0 && (
-              <tr>
-                <td colSpan={5}>Nenhum item ainda.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            {itens.length === 0 && <p className="venda-cliente-vazio">Nenhum item ainda.</p>}
 
-      <aside className="venda-lateral">
-        {cliente ? (
-          <div className="venda-cliente-selecionado">
-            <span>Cliente: {cliente.nome}</span>
-            <button type="button" onClick={() => setCliente(null)}>
-              Remover
-            </button>
-          </div>
-        ) : (
-          <p className="venda-cliente-vazio">Sem cliente (F4 para selecionar)</p>
-        )}
-
-        <div className="venda-totais">
-          <div>
-            <span>Subtotal</span>
-            <span>{moeda(subtotal)}</span>
-          </div>
-          <div>
-            <span>Desconto</span>
-            <span>{moeda(desconto)}</span>
-          </div>
-          <div className="venda-total-final">
-            <span>Total</span>
-            <span>{moeda(total)}</span>
+            <div className="cart-subtotal-line">
+              <span>SUBTOTAL</span>
+              <span>{moeda(subtotal)}</span>
+            </div>
           </div>
         </div>
 
-        <h3>Pagamento</h3>
-        <ul className="venda-pagamentos-lista">
-          {pagamentos.map((pagamento, i) => (
-            <li key={i}>
-              <span>{rotuloForma[pagamento.forma]}</span>
-              <span>{moeda(pagamento.valor)}</span>
-              <button type="button" onClick={() => removerPagamento(i)}>
-                x
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="col-right">
+          <div className="cliente-box">
+            <div className="cliente-header">Dados do cliente</div>
+            <hr className="cliente-rule" />
+            {cliente ? (
+              <div className="cliente-linha">
+                <span className="cliente-nome">
+                  <b>Nome:</b> {cliente.nome.toUpperCase()}
+                </span>
+                <button type="button" onClick={() => setCliente(null)}>
+                  Remover
+                </button>
+              </div>
+            ) : (
+              <p className="venda-cliente-vazio">Sem cliente selecionado (F4 para buscar)</p>
+            )}
+          </div>
 
-        <p>Restante: {moeda(Math.max(0, restante))}</p>
-        {erroFinalizar && <p className="erro">{erroFinalizar}</p>}
+          <div className="totais-grid">
+            <div className="totais-cell">
+              <span className="label">Desconto</span>
+              <span className="value">{moeda(desconto)}</span>
+            </div>
+            <div className="totais-cell">
+              <span className="label">Restante</span>
+              <span className="value emphasis">{moeda(Math.max(0, restante))}</span>
+            </div>
+            <div className="totais-cell">
+              <span className="label">Troco</span>
+              <span className="value gold">{moeda(troco)}</span>
+            </div>
+          </div>
 
-        <button type="button" onClick={iniciarCheckout} disabled={itens.length === 0 || finalizando}>
-          {finalizando ? 'Finalizando...' : 'Finalizar venda (F9)'}
-        </button>
+          <div className="subtotal-box">
+            <span className="label">Total a pagar</span>
+            <span className="value">{moeda(total)}</span>
+          </div>
 
-        <PainelIdentificacao operadorNome={operador.nome} />
-      </aside>
+          {pagamentos.length > 0 && (
+            <ul className="venda-pagamentos-lista">
+              {pagamentos.map((pagamento, i) => (
+                <li key={i}>
+                  <span>{rotuloForma[pagamento.forma]}</span>
+                  <span>{moeda(pagamento.valor)}</span>
+                  <button type="button" onClick={() => removerPagamento(i)}>
+                    x
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
 
-      <footer className="venda-atalhos">
-        <span>F2 Buscar produto</span>
-        <span>F3 Desconto</span>
-        <span>F4 Cliente</span>
-        <span>F5 Sangria/Suprimento</span>
-        <span>F7 Cancelar venda</span>
-        <span>F8 Fechar caixa</span>
-        <span>F9 Pagamento/Finalizar</span>
-        <span>Esc Cancelar</span>
-      </footer>
+          {erroFinalizar && <p className="erro">{erroFinalizar}</p>}
+
+          <button type="button" onClick={iniciarCheckout} disabled={itens.length === 0 || finalizando}>
+            {finalizando ? 'Finalizando...' : 'Finalizar venda (F9)'}
+          </button>
+        </div>
+      </TerminalFrame>
 
       {modo === 'busca-produto' && (
         <SeletorModal
@@ -662,6 +731,6 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
           onConfirmar={confirmarPagamento}
         />
       )}
-    </div>
+    </>
   )
 }

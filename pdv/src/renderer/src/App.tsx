@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from './lib/useSession'
 import { useOperador } from './lib/useOperador'
 import { supabase } from './lib/supabase'
-import { AppHeader } from './components/AppHeader'
+import { TerminalFrame } from './components/TerminalFrame'
 import { LoginPage } from './pages/LoginPage'
 import { AbrirCaixaPage } from './pages/AbrirCaixaPage'
 import { VendaPage } from './pages/VendaPage'
@@ -36,38 +36,22 @@ function App(): React.JSX.Element | null {
 
   if (carregandoSessao || carregandoOperador || carregandoCaixa) return null
 
-  if (!session) {
-    return (
-      <>
-        <AppHeader />
-        <LoginPage />
-      </>
-    )
-  }
+  if (!session) return <LoginPage />
 
   if (!operador) {
     return (
-      <>
-        <AppHeader />
+      <TerminalFrame titulo="SEM ACESSO">
         <div className="tela-central">
           <p>Este usuário não tem um perfil de operador cadastrado. Fale com o dono.</p>
         </div>
-      </>
+      </TerminalFrame>
     )
   }
 
   if (!caixaSessao) {
-    return (
-      <>
-        <AppHeader operadorNome={operador.nome} />
-        <AbrirCaixaPage operadorId={operador.id} onAberta={setCaixaSessao} />
-      </>
-    )
+    return <AbrirCaixaPage operadorId={operador.id} onAberta={setCaixaSessao} />
   }
 
-  // Na tela de venda o painel de identificacao (logo/estabelecimento/
-  // operador/relogio) fica embutido na lateral, entao o cabecalho do topo
-  // nao aparece aqui.
   return (
     <VendaPage
       operador={operador}

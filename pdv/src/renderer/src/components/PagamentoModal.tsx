@@ -15,7 +15,7 @@ interface Props {
   restante: number
   mensagemTopo?: string
   validarForma?: (forma: FormaPagamento) => string | null
-  onConfirmar: (forma: FormaPagamento, valor: number) => void
+  onConfirmar: (forma: FormaPagamento, valor: number, troco: number) => void
   onFechar: () => void
 }
 
@@ -53,7 +53,13 @@ export function PagamentoModal({ restante, mensagemTopo, validarForma, onConfirm
     event.preventDefault()
     const numero = Number(valor)
     if (!formaEscolhida || !numero || numero <= 0) return
-    onConfirmar(formaEscolhida, numero)
+
+    // Só dinheiro tem troco — nas outras formas o valor cobrado é exato.
+    if (formaEscolhida === 'dinheiro' && numero > restante) {
+      onConfirmar(formaEscolhida, restante, numero - restante)
+    } else {
+      onConfirmar(formaEscolhida, numero, 0)
+    }
   }
 
   if (!formaEscolhida) {
@@ -76,7 +82,7 @@ export function PagamentoModal({ restante, mensagemTopo, validarForma, onConfirm
       <form onSubmit={handleSubmitValor} className="modal-caixa">
         <h2>{formas.find((f) => f.forma === formaEscolhida)?.label}</h2>
         <label>
-          Valor a pagar nessa forma
+          {formaEscolhida === 'dinheiro' ? 'Valor recebido do cliente' : 'Valor a pagar nessa forma'}
           <input
             ref={inputValorRef}
             type="number"
