@@ -148,9 +148,9 @@ button:disabled {
 }
 
 .col-right {
-  width: 320px;
+  width: 340px;
   flex-shrink: 0;
-  padding: 20px 22px;
+  padding: 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -240,10 +240,9 @@ button:disabled {
 .cart-head,
 .cart-row {
   display: grid;
-  grid-template-columns: 2.6em 1fr 4.5em 5em auto;
+  grid-template-columns: 2.6em minmax(0, 1fr) minmax(3.5em, max-content) minmax(4.5em, max-content) auto;
   gap: 8px;
   align-items: center;
-  white-space: nowrap;
 }
 
 .cart-head {
@@ -278,12 +277,15 @@ button:disabled {
 
 .cart-num {
   color: var(--ink-soft);
+  white-space: nowrap;
 }
 
 .cart-desc {
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .cart-desc .cart-code {
@@ -296,12 +298,14 @@ button:disabled {
   text-align: right;
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .cart-val {
   text-align: right;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .cart-subtotal-line {
@@ -373,12 +377,13 @@ button:disabled {
 }
 
 .totais-cell {
-  padding: 12px 8px;
+  padding: 10px 3px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   text-align: center;
   border-right: 1px solid var(--border);
+  min-width: 0;
 }
 
 .totais-cell:last-child {
@@ -394,10 +399,12 @@ button:disabled {
 
 .totais-cell .value {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
+  overflow-wrap: break-word;
+  letter-spacing: -0.02em;
 }
 
 .totais-cell .value.emphasis {
@@ -415,6 +422,7 @@ button:disabled {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 10px;
 }
 
 .subtotal-box .label {
@@ -422,6 +430,7 @@ button:disabled {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.07em;
+  flex-shrink: 0;
 }
 
 .subtotal-box .value {
@@ -430,6 +439,9 @@ button:disabled {
   font-size: 24px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  min-width: 0;
+  overflow-wrap: break-word;
+  text-align: right;
 }
 
 .venda-pagamentos-lista li {
