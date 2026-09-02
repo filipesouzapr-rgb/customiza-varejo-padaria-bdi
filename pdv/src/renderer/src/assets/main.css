@@ -14,13 +14,14 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--ev-c-gray-3);
+  padding: 10px 18px;
+  background: linear-gradient(180deg, var(--blue-bright), var(--blue-primary));
+  border-bottom: 3px solid var(--blue-deep);
   flex-shrink: 0;
 }
 
 .app-header-logo {
-  background: var(--ev-c-white);
+  background: var(--surface);
   border-radius: 4px;
   padding: 4px 8px;
   display: flex;
@@ -28,19 +29,22 @@ body {
 }
 
 .app-header-logo img {
-  height: 22px;
+  height: 20px;
   display: block;
 }
 
 .app-header-estabelecimento {
   font-weight: 600;
   font-size: 15px;
+  color: #ffffff;
+  letter-spacing: 0.01em;
 }
 
 .app-header-operador {
   margin-left: auto;
   font-size: 13px;
-  color: var(--ev-c-text-2);
+  color: #d7e0fa;
+  font-family: var(--font-mono);
 }
 
 .tela-central {
@@ -51,41 +55,67 @@ body {
 }
 
 .form-largo {
-  width: 320px;
+  width: 340px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 28px 30px;
+  box-shadow: 0 12px 32px -12px rgba(10, 28, 77, 0.25);
+}
+
+.form-largo h1 {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--blue-primary);
+  margin-bottom: 4px;
 }
 
 label {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
 }
 
 input,
 select {
   font: inherit;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--ev-c-gray-2);
-  background: var(--ev-c-black-soft);
-  color: var(--color-text);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 9px 11px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+input:focus,
+select:focus {
+  border-color: var(--blue-bright);
 }
 
 button {
   font: inherit;
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--ev-button-alt-border);
-  background: var(--ev-button-alt-bg);
-  color: var(--ev-button-alt-text);
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 4px;
+  border: 1px solid var(--blue-primary);
+  background: var(--blue-primary);
+  color: #ffffff;
   cursor: pointer;
 }
 
 button:hover {
-  background: var(--ev-button-alt-hover-bg);
+  background: var(--blue-bright);
+  border-color: var(--blue-bright);
 }
 
 button:disabled {
@@ -94,7 +124,9 @@ button:disabled {
 }
 
 .erro {
-  color: #ff8080;
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 table {
@@ -107,15 +139,23 @@ th,
 td {
   text-align: left;
   padding: 8px 10px;
-  border-bottom: 1px solid var(--ev-c-gray-3);
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  font-weight: 600;
 }
 
 .venda-page {
   flex: 1;
   display: flex;
-  gap: 24px;
+  gap: 20px;
   padding: 16px;
-  padding-bottom: 48px;
+  padding-bottom: 52px;
 }
 
 .venda-principal {
@@ -123,21 +163,40 @@ td {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
 }
 
 .venda-scan input {
   width: 100%;
+  font-family: var(--font-mono);
   font-size: 18px;
-  padding: 12px;
+  font-variant-numeric: tabular-nums;
+  padding: 12px 14px;
+  border-width: 2px;
 }
 
 .venda-peso {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--ev-c-black-soft);
+  background: var(--surface-tint);
+  border: 1px solid var(--border);
   padding: 10px;
   border-radius: 6px;
+}
+
+.venda-itens {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.venda-itens td:nth-child(2),
+.venda-itens td:nth-child(3),
+.venda-itens td:nth-child(4) {
+  font-variant-numeric: tabular-nums;
 }
 
 .venda-lateral {
@@ -150,10 +209,12 @@ td {
 .venda-totais {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: var(--ev-c-black-soft);
-  padding: 12px;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 14px;
   border-radius: 6px;
+  font-family: var(--font-mono);
 }
 
 .venda-totais > div {
@@ -164,6 +225,10 @@ td {
 .venda-total-final {
   font-weight: 700;
   font-size: 18px;
+  color: var(--blue-primary);
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+  margin-top: 2px;
 }
 
 .venda-pagamentos-lista li {
@@ -172,20 +237,24 @@ td {
   align-items: center;
   gap: 8px;
   padding: 4px 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
 }
 
 .venda-cliente-selecionado {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--ev-c-black-soft);
-  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 9px 12px;
   border-radius: 6px;
+  font-size: 13.5px;
 }
 
 .venda-cliente-vazio {
   font-size: 13px;
-  color: var(--ev-c-text-2);
+  color: var(--ink-soft);
 }
 
 .painel-identificacao {
@@ -194,31 +263,35 @@ td {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  background: var(--ev-c-black-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 20px;
   text-align: center;
 }
 
 .painel-identificacao-logo {
-  background: var(--ev-c-white);
+  background: var(--surface-tint);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 6px 10px;
 }
 
 .painel-identificacao-logo img {
-  height: 28px;
+  height: 26px;
   display: block;
 }
 
 .painel-identificacao-estabelecimento {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
+  color: var(--blue-primary);
 }
 
 .painel-identificacao-operador {
-  font-size: 13px;
-  color: var(--ev-c-text-2);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
 }
 
 .painel-identificacao-relogio {
@@ -229,14 +302,17 @@ td {
 }
 
 .painel-identificacao-hora {
-  font-size: 28px;
+  font-family: var(--font-mono);
+  font-size: 27px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 .painel-identificacao-data {
-  font-size: 13px;
-  color: var(--ev-c-text-2);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
 }
 
 .venda-atalhos {
@@ -245,19 +321,21 @@ td {
   left: 0;
   right: 0;
   display: flex;
-  gap: 20px;
+  gap: 22px;
   justify-content: center;
-  padding: 8px;
-  background: var(--ev-c-black-soft);
-  border-top: 1px solid var(--ev-c-gray-3);
-  font-size: 12px;
-  color: var(--ev-c-text-2);
+  flex-wrap: wrap;
+  padding: 9px 16px;
+  background: var(--blue-deep);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--cyan);
 }
 
 .modal-fundo {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(10, 28, 77, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -266,18 +344,35 @@ td {
 
 .modal-caixa {
   width: 320px;
-  background: var(--ev-c-black-soft);
-  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 22px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  box-shadow: 0 24px 48px -16px rgba(10, 28, 77, 0.4);
+}
+
+.modal-caixa h2 {
+  color: var(--blue-primary);
+  font-size: 17px;
 }
 
 .modal-acoes {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.modal-acoes button:first-child {
+  background: var(--surface);
+  color: var(--ink-soft);
+  border-color: var(--border);
+}
+
+.modal-acoes button:first-child:hover {
+  background: var(--surface-tint);
 }
 
 .fechar-caixa {
@@ -288,10 +383,12 @@ td {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: var(--ev-c-black);
+  background: var(--surface-tint);
+  border: 1px solid var(--border);
   padding: 12px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13.5px;
+  font-family: var(--font-mono);
 }
 
 .fechar-caixa-resumo > div {
@@ -301,21 +398,24 @@ td {
 
 .fechar-caixa-esperado {
   font-weight: 700;
-  border-top: 1px solid var(--ev-c-gray-3);
+  color: var(--blue-primary);
+  border-top: 1px solid var(--border);
   padding-top: 6px;
   margin-top: 4px;
 }
 
 .venda-erro-flutuante {
   position: fixed;
-  bottom: 48px;
+  bottom: 52px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--ev-c-black-soft);
-  border: 1px solid #ff8080;
+  background: #fff5f5;
+  border: 1px solid var(--red);
+  color: var(--red);
   padding: 8px 16px;
   border-radius: 6px;
   z-index: 20;
+  font-size: 13px;
 }
 
 .seletor-modal {
@@ -336,10 +436,13 @@ td {
   gap: 10px;
   padding: 8px 10px;
   border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
 }
 
 .seletor-modal-lista li.ativo {
-  background: var(--ev-button-alt-hover-bg);
+  background: var(--surface-tint);
+  box-shadow: inset 2px 0 0 var(--blue-primary);
 }
 
 .seletor-modal-numero {
@@ -349,51 +452,58 @@ td {
   width: 20px;
   height: 20px;
   border-radius: 4px;
-  background: var(--ev-c-gray-3);
-  font-size: 12px;
+  background: var(--blue-primary);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .seletor-modal-sublabel {
   margin-left: auto;
-  color: var(--ev-c-text-2);
+  color: var(--ink-soft);
   font-size: 12px;
 }
 
 .seletor-modal-vazio {
-  color: var(--ev-c-text-2);
+  color: var(--ink-soft);
   padding: 8px 10px;
 }
 
 .seletor-modal-aviso {
-  background: var(--ev-c-gray-3);
+  background: var(--surface-tint);
+  border: 1px solid var(--border);
   padding: 8px 10px;
   border-radius: 6px;
   font-size: 13px;
+  color: var(--ink);
 }
 
 .seletor-modal-rodape {
-  font-size: 12px;
-  color: var(--ev-c-text-2);
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
 }
 
 .cupom {
   width: 320px;
-  background: var(--ev-c-white);
-  color: #111;
+  background: var(--surface);
+  color: var(--ink);
   padding: 16px;
   border-radius: 4px;
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
+  box-shadow: 0 24px 48px -16px rgba(10, 28, 77, 0.4);
 }
 
 .cupom h2 {
   text-align: center;
+  color: var(--blue-primary);
 }
 
 .cupom-aviso {
   text-align: center;
   font-size: 11px;
-  opacity: 0.8;
+  color: var(--ink-soft);
 }
 
 .cupom-linha {
@@ -403,6 +513,7 @@ td {
 
 .cupom-total {
   font-weight: 700;
+  color: var(--blue-primary);
 }
 
 .cupom-acoes {
@@ -424,6 +535,7 @@ td {
     top: 0;
     left: 0;
     width: 80mm;
+    box-shadow: none;
   }
   .cupom-acoes {
     display: none;
