@@ -148,41 +148,21 @@ button:disabled {
 }
 
 .col-right {
-  width: 340px;
+  width: 460px;
   flex-shrink: 0;
-  padding: 20px 20px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   background: var(--surface-tint);
   overflow-y: auto;
 }
 
-.brand-row {
+.caixa-status-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-}
-
-.brand-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.brand-logo img {
-  height: 26px;
-  display: block;
-}
-
-.brand-name {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--blue-primary);
-}
-
-.brand-sub {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-soft);
@@ -194,6 +174,30 @@ button:disabled {
   color: var(--ink-soft);
   opacity: 0.8;
   flex-shrink: 0;
+}
+
+.brand-card {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.brand-card img {
+  height: 24px;
+  display: block;
+}
+
+.brand-card .brand-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue-primary);
+  letter-spacing: 0.02em;
 }
 
 .scan-row label {
@@ -377,10 +381,10 @@ button:disabled {
 }
 
 .totais-cell {
-  padding: 10px 3px;
+  padding: 14px 6px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   text-align: center;
   border-right: 1px solid var(--border);
   min-width: 0;
@@ -399,12 +403,12 @@ button:disabled {
 
 .totais-cell .value {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
   overflow-wrap: break-word;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .totais-cell .value.emphasis {

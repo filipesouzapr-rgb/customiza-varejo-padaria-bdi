@@ -475,15 +475,9 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
         }
       >
         <div className="col-left">
-          <div className="brand-row">
-            <div className="brand-logo">
-              <img src={logoCustomiza} alt="Customiza Sistemas" />
-              <div>
-                <div className="brand-name">{NOME_ESTABELECIMENTO}</div>
-                <div className="brand-sub">Caixa 01 · NFC-e Homologação</div>
-              </div>
-            </div>
-            <svg className="printer-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div className="caixa-status-row">
+            <span>Caixa 01 · NFC-e Homologação</span>
+            <svg className="printer-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="5" y="8" width="14" height="7" rx="1" stroke="currentColor" strokeWidth="1.6" />
               <path d="M7 8V4h10v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               <rect x="7" y="15" width="10" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.6" />
@@ -622,6 +616,11 @@ export function VendaPage({ operador, caixaSessao, onCaixaFechado }: Props) {
           <button type="button" onClick={iniciarCheckout} disabled={itens.length === 0 || finalizando}>
             {finalizando ? 'Finalizando...' : 'Finalizar venda (F9)'}
           </button>
+
+          <div className="brand-card">
+            <img src={logoCustomiza} alt="Customiza Sistemas" />
+            <span className="brand-name">{NOME_ESTABELECIMENTO}</span>
+          </div>
         </div>
       </TerminalFrame>
 
