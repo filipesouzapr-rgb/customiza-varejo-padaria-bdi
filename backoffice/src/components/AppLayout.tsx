@@ -10,6 +10,7 @@ export function AppLayout() {
         <nav>
           <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/produtos">Produtos</NavLink>
+          <NavLink to="/clientes">Clientes</NavLink>
           <NavLink to="/fiado">Fiado</NavLink>
         </nav>
         <button type="button" onClick={() => supabase.auth.signOut()}>

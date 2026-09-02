@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
 import { LoginPage } from './pages/LoginPage'
 import { ProdutosPage } from './pages/ProdutosPage'
+import { ClientesPage } from './pages/ClientesPage'
 import { FiadoPage } from './pages/FiadoPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { useSession } from './lib/useSession'
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/produtos" element={<ProdutosPage />} />
+        <Route path="/clientes" element={<ClientesPage />} />
         <Route path="/fiado" element={<FiadoPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

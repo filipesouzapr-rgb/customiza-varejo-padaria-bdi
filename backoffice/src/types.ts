@@ -37,3 +37,14 @@ export interface FiadoPagamento {
   pago_em: string
   observacoes: string | null
 }
+
+export interface Cliente {
+  id: string
+  nome: string
+  cpf: string | null
+  telefone: string | null
+  limite_fiado_sugerido: number | null
+  dia_vencimento_fiado: number | null
+  ativo: boolean
+  criado_em: string
+}
