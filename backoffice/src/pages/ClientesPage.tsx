@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
+import { useParamUrl } from '../lib/useParamUrl'
 import type { Cliente } from '../types'
 
 const formVazio = {
@@ -18,7 +19,7 @@ export function ClientesPage() {
   const [erro, setErro] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
   const [salvando, setSalvando] = useState(false)
-  const [busca, setBusca] = useState('')
+  const [busca, setBusca] = useParamUrl('q', '')
 
   async function carregarClientes() {
     setCarregando(true)
